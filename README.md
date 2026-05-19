@@ -1,0 +1,6 @@
+- make env
+- put env vars
+- set -a
+- . ./.env
+- set +a
+- envsubst < prometheus/prometheus.yml.template > prometheus/prometheus.yml
