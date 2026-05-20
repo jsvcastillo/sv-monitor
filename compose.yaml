@@ -22,8 +22,8 @@ services:
     image: grafana/loki:3.2.1
     container_name: loki
     restart: unless-stopped
-    ports:
-      - "3100:3100"
+    expose:
+      - 3100
     command: -config.file=/etc/loki/local-config.yaml
     volumes:
       - loki-data:/loki
@@ -38,8 +38,8 @@ services:
     image: grafana/grafana:11.2.2
     container_name: grafana
     restart: unless-stopped
-    ports:
-      - "${GRAFANA_PORT}:3000"
+    expose:
+     - 3000
     volumes:
       - grafana-data:/var/lib/grafana
     environment:
@@ -69,6 +69,37 @@ services:
       - no-new-privileges:true
     cap_drop:
       - ALL
+    networks:
+      - monitoring
+
+  proxy:
+    image: nginx:stable-alpine3.23
+    container_name: proxy
+    restart: unless-stopped
+    ports:
+      - 80:8080
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - grafana
+      - loki
+    entrypoint:
+      - /usr/sbin/nginx
+      - -g
+      - daemon off;
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:rw,nosuid,noexec,size=64m,mode=1777
+      - /var/cache/nginx:rw,nosuid,size=64m,mode=1777
+      - /var/run:rw,nosuid,size=16m,mode=1777
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETUID
+      - SETGID
     networks:
       - monitoring
 
