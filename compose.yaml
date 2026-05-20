@@ -39,7 +39,7 @@ services:
     container_name: grafana
     restart: unless-stopped
     ports:
-      - "127.0.0.1:${GRAFANA_PORT}:3000"
+      - "${GRAFANA_PORT}:3000"
     volumes:
       - grafana-data:/var/lib/grafana
     environment:
