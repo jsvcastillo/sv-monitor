@@ -1,54 +1,82 @@
 services:
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v2.54.1
     container_name: prometheus
     restart: unless-stopped
-    ports:
-      - "${PROMETHEUS_PORT}:9090"
+    expose:
+        - "9090"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus-data:/prometheus
     command:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.path=/prometheus
-    env_file:
-      - .env
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    networks:
+      - monitoring
   
   loki:
-    image: grafana/loki:latest
+    image: grafana/loki:3.2.1
     container_name: loki
     restart: unless-stopped
-    ports:
-      - "${LOKI_PORT}:3100"
+    expose:
+      - "3100"
     command: -config.file=/etc/loki/local-config.yaml
     volumes:
       - loki-data:/loki
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    networks:
+      - monitoring
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:11.2.2
     container_name: grafana
     restart: unless-stopped
     ports:
-      - "${GRAFANA_PORT}:3000"
+      - "127.0.0.1:${GRAFANA_PORT}:3000"
     volumes:
       - grafana-data:/var/lib/grafana
     environment:
       GF_SECURITY_ADMIN_USER: "${GF_SECURITY_ADMIN_USER}"
       GF_SECURITY_ADMIN_PASSWORD: "${GF_SECURITY_ADMIN_PASSWORD}"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
     depends_on:
       - prometheus
       - loki
+    networks:
+      - monitoring
 
   alertmanager:
-    image: prom/alertmanager:latest
+    image: prom/alertmanager:v0.27.0
     container_name: alertmanager
     restart: unless-stopped
-    ports:
-      - "${ALERTMANAGER_PORT}:9093"
+    expose:
+      - "9093"
     volumes:
       - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    networks:
+      - monitoring
 
 volumes:
   prometheus-data:
   loki-data:
   grafana-data:
+
+networks:
+  monitoring:
+    driver: bridge
