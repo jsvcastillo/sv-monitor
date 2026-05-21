@@ -1,0 +1,15 @@
+# grafana/provisioning/alerting/contact-points.yml
+apiVersion: 1
+
+contactPoints:
+  - orgId: 1
+    name: discord-alerts
+    receivers:
+      - uid: discord-alerts
+        type: discord
+        disableResolveMessage: false
+        settings:
+          url: ${DISCORD_WEBHOOK_URL}
+          use_discord_username: false
+          message: |
+            {{ template "default.message" . }}

@@ -7,6 +7,7 @@ services:
         - "9090"
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/rules:/etc/prometheus/rules:ro
       - prometheus-data:/prometheus
     command:
       - --config.file=/etc/prometheus/prometheus.yml
@@ -42,33 +43,16 @@ services:
      - 3000
     volumes:
       - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
     environment:
       GF_SECURITY_ADMIN_USER: "${GF_SECURITY_ADMIN_USER}"
       GF_SECURITY_ADMIN_PASSWORD: "${GF_SECURITY_ADMIN_PASSWORD}"
       GF_USERS_ALLOW_SIGN_UP: "false"
       GF_AUTH_ANONYMOUS_ENABLED: "false"
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
+      DISCORD_WEBHOOK_URL: "${DISCORD_WEBHOOK_URL}"
     depends_on:
       - prometheus
       - loki
-    networks:
-      - monitoring
-
-  alertmanager:
-    image: prom/alertmanager:v0.27.0
-    container_name: alertmanager
-    restart: unless-stopped
-    expose:
-      - "9093"
-    volumes:
-      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
-    security_opt:
-      - no-new-privileges:true
-    cap_drop:
-      - ALL
     networks:
       - monitoring
 
